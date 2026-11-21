@@ -1,0 +1,14 @@
+{
+  "name": "Simulador de Escala 5x2",
+  "short_name": "Escala 5x2",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5f8",
+  "theme_color": "#c23b6e",
+  "lang": "pt-BR",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

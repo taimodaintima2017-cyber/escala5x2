@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Escala 5x2">
+<meta name="theme-color" content="#f6f5f8">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Simulador de Escala 5x2</title>
+<style>
+:root{--bg:#f6f5f8;--card:#fff;--ink:#1d1b26;--mut:#6b6880;--line:#e6e3ee;--acc:#c23b6e;--acc2:#fbe8ef;--red:#d33a3a;--redbg:#fde8e8;--amb:#b7791f;--ambbg:#fdf3e1;--ok:#1f8a5b;--okbg:#e3f5ec}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.4}
+header{padding:calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px calc(16px + env(safe-area-inset-left));max-width:1200px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+header p{margin:0;color:var(--mut)}
+main{max-width:1200px;margin:0 auto;padding:8px calc(16px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));display:grid;gap:16px;grid-template-columns:minmax(0,360px) minmax(0,1fr);align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+details.card>summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.card>summary::after{content:"▾";color:var(--mut);transition:transform .15s}
+details.card:not([open])>summary::after{transform:rotate(-90deg)}
+details.card[open]>summary{margin-bottom:10px}
+label{display:block;font-size:12px;color:var(--mut);margin:8px 0 0}
+input[type=text],input[type=number],input[type=time],select{width:100%;margin-top:4px;padding:8px 9px;border:1px solid var(--line);border-radius:8px;font:inherit;color:var(--ink);background:#fff}
+input:focus,select:focus{outline:2px solid var(--acc2);border-color:var(--acc)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lbl{font-size:12px;color:var(--mut);margin:10px 0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip input{display:none}
+.chip span{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--mut);cursor:pointer;font-size:13px}
+.chip input:checked+span{background:var(--acc);border-color:var(--acc);color:#fff}
+.chip{margin:0}
+.sw{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:13px;margin-top:10px}
+.sw input{width:18px;height:18px;accent-color:var(--acc)}
+.inline{display:flex;align-items:center;gap:6px;color:var(--ink);font-size:13px;margin-top:6px}
+.inline input{width:64px;margin:0}
+.hint{font-size:12px;color:var(--mut);margin:8px 0 0}
+.warn{font-size:12px;color:var(--amb);margin:4px 0 0}
+.turno{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;border-left-width:4px}
+.turno .g{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.turno .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.turno .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--mut)}
+.mins{width:100%;border-collapse:collapse;margin-top:6px}
+.mins th{font-size:11px;color:var(--mut);font-weight:500;padding:2px}
+.mins td{padding:2px}
+.mins td:first-child{font-size:12px;white-space:nowrap;padding-right:6px}
+.mins input{width:100%;min-width:30px;padding:6px 2px;text-align:center;margin:0}
+.func{display:grid;grid-template-columns:1fr 110px 32px;gap:6px;align-items:center;margin-bottom:6px}
+.func input,.func select{margin:0}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 12px}
+button:hover{border-color:var(--acc)}
+.btn-p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.btn-p:hover{filter:brightness(1.05)}
+.btn-x{padding:6px 0;color:var(--mut)}
+.btn-add{width:100%;border-style:dashed;color:var(--acc);margin-top:4px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:12px;color:var(--mut)}
+.stat.bad b{color:var(--red)}.stat.good b{color:var(--ok)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table.grid{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}
+.grid th,.grid td{border-bottom:1px solid var(--line);text-align:center;padding:0;height:32px;min-width:30px}
+.grid th:first-child,.grid td:first-child{position:sticky;left:0;background:#fff;z-index:2;text-align:left;padding:0 10px;min-width:118px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--line)}
+.grid thead th{position:sticky;top:0;background:#faf9fc;z-index:1;font-weight:600;line-height:1.1;cursor:pointer}
+.grid thead th:first-child{z-index:3;background:#faf9fc;cursor:default}
+.grid thead th small{display:block;font-weight:400;color:var(--mut);font-size:10px}
+.grid thead th.dom{color:var(--acc)}
+.grid thead th.fech{color:#aaa}
+.grid tr.grp td{background:#faf9fc;font-weight:600;text-align:left;padding:0 10px;height:28px}
+.grid tr.grp td:first-child{background:#faf9fc}
+.grid td.cell{cursor:pointer;font-weight:600;position:relative;user-select:none}
+.grid td.cell:hover{outline:2px solid var(--acc);outline-offset:-2px}
+.c-F{background:#f1eff5;color:#8a869c}
+.c-X{background:repeating-linear-gradient(45deg,#fafafa,#fafafa 4px,#f0f0f0 4px,#f0f0f0 8px);color:#bbb;cursor:default!important}
+.c-H{background:#fff4d6;color:var(--amb);cursor:default!important;font-size:10px}
+.adj::after{content:"";position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--acc)}
+.grid tr.cov td{font-size:11px;color:var(--mut);height:26px}
+.grid tr.cov td:first-child{font-weight:500;font-size:11px}
+.cov .low{background:var(--redbg);color:var(--red);font-weight:700}
+.cov .okc{color:var(--ok)}
+.grid td.tot{font-weight:600;min-width:46px;background:#faf9fc}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mut);margin:10px 0}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-3px;margin-right:4px}
+.alerts{margin-top:12px}
+.alert{padding:8px 10px;border-radius:8px;margin-bottom:6px;font-size:13px}
+.alert.r{background:var(--redbg);color:#8f2424}
+.alert.a{background:var(--ambbg);color:#7a4f0e}
+.alert.ok{background:var(--okbg);color:#145c3c}
+h2{font-size:16px;margin:0 0 10px}
+.resumo{width:100%;border-collapse:collapse;font-size:13px}
+.resumo th{text-align:left;font-size:11px;color:var(--mut);font-weight:500;border-bottom:1px solid var(--line);padding:6px 4px}
+.resumo td{padding:7px 4px;border-bottom:1px solid var(--line)}
+.resumo td.n{text-align:right;font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+#modal{position:fixed;inset:0;background:rgba(20,16,30,.45);display:none;align-items:flex-end;justify-content:center;z-index:50;padding:16px}
+#modal.on{display:flex}
+@media(min-width:700px){#modal{align-items:center}}
+.sheet{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:85vh;overflow:auto;padding:18px}
+.sheet h3{margin:0 0 4px;font-size:17px}
+.sheet .sub{color:var(--mut);font-size:12px;margin-bottom:12px}
+.sheet textarea{width:100%;height:260px;font-family:ui-monospace,monospace;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:8px}
+.pp{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.pp span:last-child{color:var(--mut)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;transition:transform .2s;z-index:60}
+#toast.on{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Simulador de Escala 5x2</h1>
+  <p>Monte a equipe, defina turnos e cobertura mínima — as folgas são distribuídas automaticamente. Toque numa célula para ajustar à mão.</p>
+</header>
+<main>
+  <section id="config"></section>
+  <section id="resultado"></section>
+</main>
+<div id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script>
+const DIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const INI=['S','T','Q','Q','S','S','D'];
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const CORES=['#2563eb','#c23b6e','#0d9488','#9333ea','#ea580c','#4d7c0f','#0369a1'];
+const KEY='escala5x2.v1';
+const $=id=>document.getElementById(id);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const dow=d=>(d.getDay()+6)%7;
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const fromIso=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function rgba(hex,a){const h=hex.replace('#','');const n=parseInt(h,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`}
+function minutos(hhmm){const [h,m]=(hhmm||'0:0').split(':').map(Number);return (h||0)*60+(m||0)}
+function netMin(t){let d=minutos(t.fim)-minutos(t.ini);if(d<=0)d+=1440;return Math.max(0,d-(+t.intervalo||0))}
+function fmtH(min){const h=Math.floor(min/60),m=Math.round(min%60);return m?`${h}h${pad(m)}`:`${h}h`}
+
+function padrao(){
+  const hoje=new Date();
+  return{
+    ano:hoje.getFullYear(),mes:hoje.getMonth(),
+    abertos:[1,1,1,1,1,1,1],feriados:'',
+    consecutivas:true,modo:'rotativo',regraDomingo:true,domingoCada:3,seed:7,
+    turnos:[
+      {id:'m',nome:'Manhã',sigla:'M',ini:'08:00',fim:'17:00',intervalo:60,cor:CORES[0]},
+      {id:'t',nome:'Tarde',sigla:'T',ini:'13:00',fim:'22:00',intervalo:60,cor:CORES[1]}
+    ],
+    minimos:{m:[2,2,2,2,2,2,1],t:[2,2,2,2,2,2,1]},
+    funcs:[
+      {id:uid(),nome:'Ana',turnoId:'m'},{id:uid(),nome:'Bruna',turnoId:'m'},{id:uid(),nome:'Carla',turnoId:'m'},
+      {id:uid(),nome:'Daniela',turnoId:'t'},{id:uid(),nome:'Elisa',turnoId:'t'},{id:uid(),nome:'Fernanda',turnoId:'t'}
+    ],
+    ajustes:{}
+  };
+}
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!Array.isArray(S.turnos)||!S.turnos.length)S=padrao();
+function salvar(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function normalizar(){
+  const ids=new Set(S.turnos.map(t=>t.id));
+  S.funcs.forEach(f=>{if(!ids.has(f.turnoId))f.turnoId=S.turnos[0].id});
+  S.turnos.forEach(t=>{if(!Array.isArray(S.minimos[t.id]))S.minimos[t.id]=[1,1,1,1,1,1,1]});
+  S.domingoCada=Math.max(1,Math.min(8,parseInt(S.domingoCada)||3));
+  S.ajustes=S.ajustes||{};
+}
+function feriadosDoMes(){
+  const n=new Date(S.ano,S.mes+1,0).getDate();
+  return new Set(String(S.feriados||'').split(/[^0-9]+/).map(Number).filter(d=>d>=1&&d<=n).map(d=>iso(new Date(S.ano,S.mes,d))));
+}
+
+/* ---------- motor da escala ---------- */
+function gerar(){
+  let best=null;
+  for(let a=0;a<40;a++){const g=gerarUma(a);if(!best||g.score<best.score)best=g;if(best.score===0)break}
+  return best;
+}
+function gerarUma(tentativa){
+  const y=S.ano,m=S.mes;
+  const first=new Date(y,m,1),last=new Date(y,m+1,0);
+  const start=addDays(first,-dow(first)),end=addDays(last,6-dow(last));
+  const fer=feriadosDoMes();
+  const rng=mulberry32((S.seed|0)*9973+y*13+m+tentativa*7919);let score=0;const runIn={};
+  const N=S.domingoCada;
+  const base={},since={},fixed={},lastPick={};
+  const idxT={};
+  S.funcs.forEach(f=>{base[f.id]={};const i=idxT[f.turnoId]=(idxT[f.turnoId]??-1)+1;since[f.id]=N-1-(i%N);runIn[f.id]=0});
+  const keys=[],weeks=[],open={},tipo={};
+  for(let ws=new Date(start);ws<=end;ws=addDays(ws,7)){
+    const days=[0,1,2,3,4,5,6].map(i=>addDays(ws,i));
+    const ks=days.map(iso);
+    keys.push(...ks);weeks.push(ks);
+    const regFech=ks.map((k,i)=>!S.abertos[i]);
+    const fe=ks.map((k,i)=>!regFech[i]&&fer.has(k));
+    const op=ks.map((k,i)=>!regFech[i]&&!fe[i]);
+    ks.forEach((k,i)=>{open[k]=op[i];tipo[k]=regFech[i]?'X':fe[i]?'H':'O'});
+    const counts={};
+    S.turnos.forEach(t=>counts[t.id]=op.map(()=>0));
+    S.funcs.forEach(f=>op.forEach((o,i)=>{if(o)counts[f.turnoId][i]++}));
+    const forced=regFech.filter(Boolean).length;
+    const need=Math.max(0,2-forced);
+    const openIdx=[0,1,2,3,4,5,6].filter(i=>op[i]);
+    const devido=f=>S.regraDomingo&&op[6]&&since[f.id]>=N-1;
+    const ordem=S.funcs.map(f=>({f,r:rng()})).sort((a,b)=>(devido(b.f)-devido(a.f))||(a.r-b.r));
+    for(const {f} of ordem){
+      const t=f.turnoId,mins=S.minimos[t];
+      let cands=[];
+      if(need===0)cands=[[]];
+      else if(need===1)cands=openIdx.map(i=>[i]);
+      else{
+        for(let a=0;a<openIdx.length;a++)for(let b=a+1;b<openIdx.length;b++)cands.push([openIdx[a],openIdx[b]]);
+      }
+      if(!cands.length)cands=[openIdx.slice(0,need)];
+      const primeiroDescanso=c=>{for(let i=0;i<7;i++)if(!op[i]||c.includes(i))return i;return 7};
+      const okRun=cands.filter(c=>runIn[f.id]+primeiroDescanso(c)<=6);
+      if(okRun.length)cands=okRun;
+      if(devido(f)){const ds=cands.filter(c=>c.includes(6));if(ds.length)cands=ds}
+      const fp=S.modo==='fixo'?fixed[f.id]:null;
+      if(fp){const same=cands.filter(c=>c.join()===fp.join());if(same.length)cands=same}
+      let best=cands[0],bs=-Infinity;
+      for(const c of cands){
+        let s=0;
+        for(const d of c){const slack=counts[t][d]-1-(mins[d]||0);s+=slack<0?slack*1000:Math.min(slack,4)*10}
+        if(S.modo==='rotativo'&&lastPick[f.id]&&c.join()===lastPick[f.id].join())s-=4;
+        if(fp)s+=c.filter(d=>fp.includes(d)).length*20;
+        if(need===2&&S.consecutivas&&c[1]-c[0]===1)s+=25;
+        if(need===1&&S.consecutivas){const d=c[0];if(regFech[(d+6)%7]||regFech[(d+1)%7])s+=15}
+        s+=rng()*3;
+        if(s>bs){bs=s;best=c}
+      }
+      best.forEach(d=>counts[t][d]--);
+      if(runIn[f.id]+primeiroDescanso(best)>6)score+=500;
+      let ult=-1;for(let i=0;i<7;i++)if(!op[i]||best.includes(i))ult=i;
+      runIn[f.id]=ult<0?runIn[f.id]+7:6-ult;
+      if(devido(f)&&!best.includes(6))score+=300;
+      if(need===2&&S.consecutivas&&best[1]-best[0]!==1)score+=5;
+      ks.forEach((k,i)=>{base[f.id][k]=regFech[i]?'X':fe[i]?'H':best.includes(i)?'F':'T'});
+      if(op[6])since[f.id]=best.includes(6)?0:since[f.id]+1;else since[f.id]=0;
+      lastPick[f.id]=best;
+      if(S.modo==='fixo'&&!fixed[f.id]&&need===2)fixed[f.id]=best;
+    }
+    S.turnos.forEach(t=>op.forEach((o,i)=>{if(o){const sl=counts[t.id][i]-(S.minimos[t.id][i]||0);if(sl<0)score+=-sl*1000}}));
+  }
+  return{base,keys,weeks,open,tipo,score};
+}
+function eff(G,f,k){const b=G.base[f.id][k];if(b==='T'||b==='F'){const a=S.ajustes[f.id+'|'+k];if(a)return a}return b}
+
+function analisar(G){
+  const n=new Date(S.ano,S.mes+1,0).getDate();
+  const dias=[];for(let i=1;i<=n;i++){const d=new Date(S.ano,S.mes,i);dias.push({d,k:iso(d),dow:dow(d),num:i})}
+  const cov={};S.turnos.forEach(t=>{cov[t.id]={}});
+  dias.forEach(dd=>{S.turnos.forEach(t=>cov[t.id][dd.k]=0);S.funcs.forEach(f=>{if(eff(G,f,dd.k)==='T')cov[f.turnoId][dd.k]++})});
+  const alertas=[];let diasBaixos=new Set();
+  dias.forEach(dd=>{if(!G.open[dd.k])return;S.turnos.forEach(t=>{const mn=S.minimos[t.id][dd.dow]||0,c=cov[t.id][dd.k];if(c<mn){diasBaixos.add(dd.k);alertas.push({s:'r',t:`${pad(dd.num)}/${pad(S.mes+1)} (${DIAS[dd.dow]}) · ${t.nome}: ${c} de ${mn} pessoas`})}})});
+  const stats={};
+  const tmap=Object.fromEntries(S.turnos.map(t=>[t.id,t]));
+  S.funcs.forEach(f=>{
+    let trab=0,folg=0,dom=0;
+    dias.forEach(dd=>{const e=eff(G,f,dd.k);if(e==='T')trab++;else{if(e==='F'||e==='X')folg++;if(dd.dow===6)dom++}});
+    stats[f.id]={trab,folg,dom,horas:trab*netMin(tmap[f.turnoId])};
+    // dias seguidos
+    let run=0,ini=null,maxRun=0,maxIni=null;
+    G.keys.forEach(k=>{if(eff(G,f,k)==='T'){if(!run)ini=k;run++;if(run>maxRun){maxRun=run;maxIni=ini}}else run=0});
+    if(maxRun>6){const d=fromIso(maxIni);alertas.push({s:'a',t:`${f.nome||'Sem nome'}: ${maxRun} dias seguidos de trabalho a partir de ${pad(d.getDate())}/${pad(d.getMonth()+1)} (o descanso semanal deve vir em até 7 dias)`})}
+    G.weeks.forEach(ks=>{const c=ks.filter(k=>eff(G,f,k)==='T').length;if(c>5){const d=fromIso(ks[0]);alertas.push({s:'a',t:`${f.nome||'Sem nome'}: ${c} dias de trabalho na semana de ${pad(d.getDate())}/${pad(d.getMonth()+1)} (5x2 = 5 dias)`})}});
+    if(S.regraDomingo&&S.abertos[6]){
+      const doms=G.keys.filter(k=>fromIso(k).getDay()===0);
+      let r=0,flag=false;doms.forEach(k=>{if(eff(G,f,k)==='T'){r++;if(r>=S.domingoCada)flag=true}else r=0});
+      if(flag)alertas.push({s:'a',t:`${f.nome||'Sem nome'}: ${S.domingoCada} ou mais domingos seguidos sem folga`});
+    }
+  });
+  return{dias,cov,alertas,stats,diasBaixos:diasBaixos.size,tmap};
+}
+
+/* ---------- configuração ---------- */
+function avisosTurno(t){
+  const nm=netMin(t),w=[];
+  if(nm*5>44*60)w.push(`Semana com ${fmtH(nm*5)} passa de 44h.`);
+  if(nm>600)w.push('Jornada diária acima de 10h.');
+  if(nm>360&&(+t.intervalo||0)<60)w.push('Acima de 6h de trabalho pede intervalo de pelo menos 1h.');
+  else if(nm>240&&nm<=360&&(+t.intervalo||0)<15)w.push('Entre 4h e 6h pede intervalo de 15 min.');
+  return w;
+}
+function renderConfig(){
+  const tOpts=sel=>S.turnos.map(t=>`<option value="${t.id}" ${t.id===sel?'selected':''}>${esc(t.nome)}</option>`).join('');
+  $('config').innerHTML=`
+  <details class="card" open><summary>Período e funcionamento</summary>
+    <div class="row">
+      <label>Mês<select data-k="mes">${MESES.map((n,i)=>`<option value="${i}" ${i==S.mes?'selected':''}>${n}</option>`).join('')}</select></label>
+      <label>Ano<input type="number" data-k="ano" value="${S.ano}" min="2020" max="2100"></label>
+    </div>
+    <div class="lbl">Dias em que a loja abre</div>
+    <div class="chips">${DIAS.map((d,i)=>`<label class="chip"><input type="checkbox" data-abre="${i}" ${S.abertos[i]?'checked':''}><span>${d}</span></label>`).join('')}</div>
+    <label>Feriados / dias fechados neste mês<input type="text" data-k="feriados" value="${esc(S.feriados)}" placeholder="ex.: 2, 15, 20"></label>
+  </details>
+  <details class="card" open><summary>Regras da escala</summary>
+    <label>Tipo de folga<select data-k="modo">
+      <option value="rotativo" ${S.modo==='rotativo'?'selected':''}>Rotativa (muda a cada semana)</option>
+      <option value="fixo" ${S.modo==='fixo'?'selected':''}>Fixa (mesmos dias toda semana)</option></select></label>
+    <label class="sw"><input type="checkbox" data-k="consecutivas" ${S.consecutivas?'checked':''}>Folgas em dias seguidos, quando possível</label>
+    <label class="sw"><input type="checkbox" data-k="regraDomingo" ${S.regraDomingo?'checked':''}>Garantir folga no domingo</label>
+    <div class="inline">pelo menos 1 a cada <input type="number" data-k="domingoCada" min="1" max="8" value="${S.domingoCada}"> semanas</div>
+    <p class="hint">No comércio, a Lei 10.101/2000 prevê que o descanso semanal caia no domingo pelo menos 1 vez a cada 3 semanas. Vale conferir também a convenção coletiva da categoria.</p>
+  </details>
+  <details class="card"><summary>Turnos e cobertura mínima</summary>
+    ${S.turnos.map(t=>{const w=avisosTurno(t);return`<div class="turno" style="border-left-color:${t.cor}">
+      <div class="g"><label>Nome<input type="text" data-turno="${t.id}" data-f="nome" value="${esc(t.nome)}"></label>
+      <label>Sigla<input type="text" maxlength="2" data-turno="${t.id}" data-f="sigla" value="${esc(t.sigla)}"></label></div>
+      <div class="g3"><label>Entrada<input type="time" data-turno="${t.id}" data-f="ini" value="${t.ini}"></label>
+      <label>Saída<input type="time" data-turno="${t.id}" data-f="fim" value="${t.fim}"></label>
+      <label>Intervalo (min)<input type="number" min="0" step="15" data-turno="${t.id}" data-f="intervalo" value="${t.intervalo}"></label></div>
+      <div class="meta"><span id="h-${t.id}">${fmtH(netMin(t))}/dia · ${fmtH(netMin(t)*5)}/semana</span>
+      ${S.turnos.length>1?`<button class="btn-x" data-act="delTurno" data-id="${t.id}">Remover</button>`:''}</div>
+      <div id="w-${t.id}">${w.map(x=>`<p class="warn">⚠ ${x}</p>`).join('')}</div>
+    </div>`}).join('')}
+    <button class="btn-add" data-act="addTurno">+ Adicionar turno</button>
+    <div class="lbl" style="margin-top:14px">Mínimo de pessoas trabalhando por dia</div>
+    <table class="mins"><tr><th></th>${DIAS.map(d=>`<th>${d}</th>`).join('')}</tr>
+    ${S.turnos.map(t=>`<tr><td><span class="dot" style="background:${t.cor}"></span>${esc(t.nome)}</td>${DIAS.map((d,i)=>`<td><input type="number" min="0" data-min="${t.id}" data-d="${i}" value="${S.minimos[t.id][i]}"></td>`).join('')}</tr>`).join('')}</table>
+  </details>
+  <details class="card" open><summary>Equipe (${S.funcs.length})</summary>
+    ${S.funcs.map(f=>`<div class="func"><input type="text" placeholder="Nome" data-func="${f.id}" data-f="nome" value="${esc(f.nome)}">
+      <select data-func="${f.id}" data-f="turnoId">${tOpts(f.turnoId)}</select>
+      <button class="btn-x" title="Remover" data-act="delFunc" data-id="${f.id}">✕</button></div>`).join('')}
+    <button class="btn-add" data-act="addFunc">+ Adicionar pessoa</button>
+  </details>`;
+}
+function onConfig(e){
+  const el=e.target;let estrutural=false;
+  if(el.dataset.k){
+    const k=el.dataset.k;
+    if(el.type==='checkbox')S[k]=el.checked;
+    else if(k==='mes'||k==='ano'||k==='domingoCada'){const v=parseInt(el.value);if(isNaN(v))return;S[k]=v}
+    else S[k]=el.value;
+  }else if(el.dataset.abre!==undefined){S.abertos[+el.dataset.abre]=el.checked?1:0}
+  else if(el.dataset.turno){
+    const t=S.turnos.find(x=>x.id===el.dataset.turno);const f=el.dataset.f;
+    t[f]=f==='intervalo'?Math.max(0,parseInt(el.value)||0):el.value;
+    const h=$('h-'+t.id);if(h)h.textContent=`${fmtH(netMin(t))}/dia · ${fmtH(netMin(t)*5)}/semana`;
+    const w=$('w-'+t.id);if(w)w.innerHTML=avisosTurno(t).map(x=>`<p class="warn">⚠ ${x}</p>`).join('');
+    if(f==='nome'&&e.type==='change')estrutural=true;
+  }else if(el.dataset.min){S.minimos[el.dataset.min][+el.dataset.d]=Math.max(0,parseInt(el.value)||0)}
+  else if(el.dataset.func){const f=S.funcs.find(x=>x.id===el.dataset.func);f[el.dataset.f]=el.value}
+  else return;
+  salvar();if(estrutural)renderConfig();atualizar();
+}
+$('config').addEventListener('input',onConfig);
+$('config').addEventListener('change',e=>{if(e.target.dataset.turno&&e.target.dataset.f==='nome')onConfig(e)});
+$('config').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act,id=b.dataset.id;
+  if(a==='addFunc'){const cnt={};S.turnos.forEach(t=>cnt[t.id]=0);S.funcs.forEach(f=>cnt[f.turnoId]++);const t=S.turnos.slice().sort((x,y)=>cnt[x.id]-cnt[y.id])[0];S.funcs.push({id:uid(),nome:'',turnoId:t.id})}
+  if(a==='delFunc'){S.funcs=S.funcs.filter(f=>f.id!==id);Object.keys(S.ajustes).forEach(k=>{if(k.startsWith(id+'|'))delete S.ajustes[k]})}
+  if(a==='addTurno'){const tid=uid();S.turnos.push({id:tid,nome:'Novo turno',sigla:'N',ini:'10:00',fim:'19:00',intervalo:60,cor:CORES[S.turnos.length%CORES.length]});S.minimos[tid]=[1,1,1,1,1,1,1]}
+  if(a==='delTurno'){S.turnos=S.turnos.filter(t=>t.id!==id);delete S.minimos[id];normalizar()}
+  salvar();renderConfig();atualizar();
+  if(a==='addFunc'){const ins=$('config').querySelectorAll('.func input');ins[ins.length-1]?.focus()}
+});
+
+/* ---------- resultado ---------- */
+let G,A;
+function atualizar(){normalizar();G=gerar();A=analisar(G);renderResultado()}
+function celula(f,k,tm){
+  const e=eff(G,f,k),aj=S.ajustes[f.id+'|'+k]?' adj':'';
+  if(e==='X')return`<td class="cell c-X">–</td>`;
+  if(e==='H')return`<td class="cell c-H">FER</td>`;
+  if(e==='F')return`<td class="cell c-F${aj}" data-c="${f.id}|${k}">F</td>`;
+  return`<td class="cell${aj}" data-c="${f.id}|${k}" style="background:${rgba(tm.cor,.14)};color:${tm.cor}">${esc(tm.sigla||'T')}</td>`;
+}
+function renderResultado(){
+  const {dias,cov,alertas,stats,diasBaixos,tmap}=A;
+  const nAj=Object.keys(S.ajustes).filter(k=>dias.some(d=>k.endsWith('|'+d.k))).length;
+  const horasMedias=S.funcs.length?Math.round(S.funcs.reduce((s,f)=>s+stats[f.id].horas,0)/S.funcs.length):0;
+  let html=`<div class="stats">
+    <div class="stat"><b>${S.funcs.length}</b><span>pessoas na equipe</span></div>
+    <div class="stat ${diasBaixos?'bad':'good'}"><b>${diasBaixos}</b><span>dias abaixo do mínimo</span></div>
+    <div class="stat ${alertas.length?'bad':'good'}"><b>${alertas.length}</b><span>alertas</span></div>
+    <div class="stat"><b>${fmtH(horasMedias)}</b><span>média de horas no mês</span></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <h2 style="margin:0">${MESES[S.mes]} de ${S.ano}</h2>
+      <div class="actions">
+        <button class="btn-p" data-r="nova">↻ Nova variação</button>
+        <button data-r="zap">Copiar p/ WhatsApp</button>
+        <button data-r="csv">Copiar planilha</button>
+        ${nAj?`<button data-r="limpar">Desfazer ${nAj} ajuste${nAj>1?'s':''}</button>`:''}
+      </div>
+    </div>
+    <div class="tablewrap"><table class="grid"><thead><tr><th>Equipe</th>
+    ${dias.map(d=>`<th class="${d.dow===6?'dom':''} ${G.open[d.k]?'':'fech'}" data-dia="${d.k}">${d.num}<small>${INI[d.dow]}</small></th>`).join('')}
+    <th>Trab.</th><th>Folgas</th><th>Dom.<br>livres</th><th>Horas</th></tr></thead><tbody>`;
+  S.turnos.forEach(t=>{
+    const fs=S.funcs.filter(f=>f.turnoId===t.id);
+    html+=`<tr class="grp"><td><span class="dot" style="background:${t.cor}"></span>${esc(t.nome)} · ${t.ini}–${t.fim}</td><td colspan="${dias.length+4}"></td></tr>`;
+    fs.forEach(f=>{const s=stats[f.id];
+      html+=`<tr><td title="${esc(f.nome)}">${esc(f.nome)||'<i style="color:#aaa">sem nome</i>'}</td>${dias.map(d=>celula(f,d.k,t)).join('')}
+      <td class="tot">${s.trab}</td><td class="tot">${s.folg}</td><td class="tot">${s.dom}</td><td class="tot">${fmtH(s.horas)}</td></tr>`});
+    html+=`<tr class="cov"><td>Cobertura ${esc(t.sigla||'')}</td>${dias.map(d=>{
+      if(!G.open[d.k])return'<td></td>';const c=cov[t.id][d.k],mn=S.minimos[t.id][d.dow]||0;
+      return`<td class="${c<mn?'low':'okc'}" title="${c} de ${mn}">${c}/${mn}</td>`}).join('')}<td colspan="4"></td></tr>`;
+  });
+  html+=`</tbody></table></div>
+    <div class="legend">${S.turnos.map(t=>`<span><i style="background:${rgba(t.cor,.25)}"></i>${esc(t.sigla)} = ${esc(t.nome)}</span>`).join('')}
+    <span><i style="background:#f1eff5"></i>F = folga</span><span><i style="background:#fff4d6"></i>FER = feriado</span>
+    <span><i style="background:#eee"></i>– = loja fechada</span><span><i style="background:var(--acc);border-radius:50%;width:8px;height:8px;vertical-align:0"></i>ajuste manual</span></div>
+    <p class="hint">Toque numa célula para trocar trabalho ↔ folga. Toque no número do dia para ver quem está escalado.</p>
+    <div class="alerts">${alertas.length?alertas.slice(0,40).map(a=>`<div class="alert ${a.s}">${a.s==='r'?'●':'⚠'} ${esc(a.t)}</div>`).join('')+(alertas.length>40?`<div class="hint">+${alertas.length-40} alertas</div>`:''):'<div class="alert ok">✓ Cobertura mínima atendida em todos os dias e nenhuma regra violada.</div>'}</div>
+  </div>
+  <div class="card"><h2>Resumo por pessoa</h2>
+    <table class="resumo"><tr><th>Nome</th><th>Turno</th><th style="text-align:right">Dias</th><th style="text-align:right">Folgas</th><th style="text-align:right">Dom. livres</th><th style="text-align:right">Horas</th></tr>
+    ${S.funcs.map(f=>{const s=stats[f.id],t=tmap[f.turnoId];return`<tr><td>${esc(f.nome)||'—'}</td><td><span class="dot" style="background:${t.cor}"></span>${esc(t.nome)}</td><td class="n">${s.trab}</td><td class="n">${s.folg}</td><td class="n">${s.dom}</td><td class="n">${fmtH(s.horas)}</td></tr>`}).join('')}
+    </table></div>`;
+  $('resultado').innerHTML=html;
+}
+$('resultado').addEventListener('click',e=>{
+  const c=e.target.closest('[data-c]');
+  if(c){const [fid,k]=c.dataset.c.split('|');const f=S.funcs.find(x=>x.id===fid);const b=G.base[fid][k];const cur=eff(G,f,k);const nv=cur==='T'?'F':'T';
+    if(nv===b)delete S.ajustes[fid+'|'+k];else S.ajustes[fid+'|'+k]=nv;salvar();A=analisar(G);renderResultado();return}
+  const d=e.target.closest('[data-dia]');if(d){detalheDia(d.dataset.dia);return}
+  const r=e.target.closest('[data-r]');if(!r)return;
+  if(r.dataset.r==='nova'){S.seed=(S.seed|0)+1;salvar();atualizar();toast('Nova distribuição de folgas gerada')}
+  if(r.dataset.r==='limpar'){A.dias.forEach(d=>Object.keys(S.ajustes).forEach(k=>{if(k.endsWith('|'+d.k))delete S.ajustes[k]}));salvar();atualizar()}
+  if(r.dataset.r==='zap')copiar(textoZap(),'Texto da escala');
+  if(r.dataset.r==='csv')copiar(textoCSV(),'Planilha (cole no Excel ou Google Sheets)');
+});
+function detalheDia(k){
+  const d=fromIso(k),dw=dow(d);
+  let h=`<h3>${DIAS[dw]}, ${pad(d.getDate())}/${pad(d.getMonth()+1)}</h3>`;
+  if(!G.open[k]){h+=`<div class="sub">${G.tipo[k]==='H'?'Feriado':'Loja fechada'}</div>`}
+  else{
+    h+=`<div class="sub">Quem trabalha e quem folga</div>`;
+    S.turnos.forEach(t=>{
+      const fs=S.funcs.filter(f=>f.turnoId===t.id);const tr=fs.filter(f=>eff(G,f,k)==='T'),fo=fs.filter(f=>eff(G,f,k)!=='T');
+      const mn=S.minimos[t.id][dw]||0;
+      h+=`<div style="margin:12px 0 4px;font-weight:600"><span class="dot" style="background:${t.cor}"></span>${esc(t.nome)} · ${t.ini}–${t.fim} <span style="font-weight:400;color:${tr.length<mn?'var(--red)':'var(--mut)'}">(${tr.length}/${mn})</span></div>`;
+      h+=tr.map(f=>`<div class="pp"><span>${esc(f.nome)||'—'}</span><span>trabalha</span></div>`).join('');
+      h+=fo.map(f=>`<div class="pp"><span style="color:var(--mut)">${esc(f.nome)||'—'}</span><span>folga</span></div>`).join('');
+    });
+  }
+  h+=`<div style="margin-top:14px;text-align:right"><button data-close>Fechar</button></div>`;
+  abrir(h);
+}
+function textoZap(){
+  let t=`*Escala ${MESES[S.mes]}/${S.ano}*\n`;
+  S.turnos.forEach(tu=>{
+    const fs=S.funcs.filter(f=>f.turnoId===tu.id);if(!fs.length)return;
+    t+=`\n*${tu.nome}* — ${tu.ini} às ${tu.fim}\n`;
+    fs.forEach(f=>{const fol=A.dias.filter(d=>G.open[d.k]&&eff(G,f,d.k)==='F').map(d=>`${pad(d.num)} ${DIAS[d.dow]}`);
+      t+=`• ${f.nome||'Sem nome'}: folgas ${fol.length?fol.join(', '):'—'}\n`});
+  });
+  const fer=A.dias.filter(d=>G.tipo[d.k]==='H').map(d=>pad(d.num));
+  if(fer.length)t+=`\nFeriados (loja fechada): ${fer.join(', ')}\n`;
+  const fech=DIAS.filter((d,i)=>!S.abertos[i]);
+  if(fech.length)t+=`Loja fechada às ${fech.join(', ')}.\n`;
+  return t;
+}
+function textoCSV(){
+  const sep='\t';
+  let t=['Nome','Turno',...A.dias.map(d=>`${pad(d.num)} ${DIAS[d.dow]}`),'Dias','Folgas','Horas'].join(sep)+'\n';
+  S.funcs.forEach(f=>{const tm=A.tmap[f.turnoId],s=A.stats[f.id];
+    t+=[f.nome,tm.nome,...A.dias.map(d=>{const e=eff(G,f,d.k);return e==='T'?tm.sigla:e==='F'?'F':e==='H'?'FER':'-'}),s.trab,s.folg,fmtH(s.horas)].join(sep)+'\n'});
+  return t;
+}
+async function copiar(txt,titulo){
+  try{await navigator.clipboard.writeText(txt);toast('Copiado!')}
+  catch(e){abrir(`<h3>${titulo}</h3><div class="sub">Selecione tudo e copie.</div><textarea readonly>${esc(txt)}</textarea><div style="margin-top:10px;text-align:right"><button data-close>Fechar</button></div>`);const ta=$('sheet').querySelector('textarea');ta.focus();ta.select()}
+}
+function abrir(h){$('sheet').innerHTML=h;$('modal').classList.add('on')}
+$('modal').addEventListener('click',e=>{if(e.target.id==='modal'||e.target.closest('[data-close]'))$('modal').classList.remove('on')});
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1800)}
+
+normalizar();renderConfig();atualizar();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
